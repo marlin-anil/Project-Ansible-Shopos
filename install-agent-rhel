@@ -1,0 +1,39 @@
+---
+- name: install agent shopos di rhel
+  become: true
+  hosts: rhel
+  vars:
+    - sophos_tmp_dir: /tmp/Sophos_Installer
+    - sophos_agent_download_url: https://dzr-api-amzn-us-west-2-fa88.api-upe.p.hmr.sophos.com/api/download/2c09a7d608f6f1bea124beaa6ebfa842/SophosSetup.sh
+    - downloaded_file_name: SophosSetup.sh
+  tasks:
+    - name: SOPHOS | Create Temporary Work Directory
+      file:
+        path: "{{ sophos_tmp_dir }}"
+        state: directory
+
+    - name: SOPHOS | Download Sophos Executable
+      get_url:
+        url: "{{ sophos_agent_download_url }}"
+        dest: "{{ sophos_tmp_dir }}/{{ downloaded_file_name }}"
+        timeout: 600
+        force: yes
+      register: sophos_download
+      retries: 3
+      delay: 10
+      until: sophos_download is succeeded
+
+    - name: "SOPHOS | Making {{ downloaded_file_name }} executable"
+      file:
+        path: "{{ sophos_tmp_dir }}/{{ downloaded_file_name }}"
+        mode: +x
+
+    - name: Installing Sophos
+      command: sh "{{ sophos_tmp_dir }}/{{ downloaded_file_name }}"
+      args:
+        chdir: "{{ sophos_tmp_dir }}"
+
+    - name: SOPHOS | Delete sophos temp folder
+      file:
+        path: "{{ sophos_tmp_dir }}/"
+        state: absent
