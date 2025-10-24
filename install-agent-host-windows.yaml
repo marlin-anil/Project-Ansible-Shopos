@@ -1,0 +1,20 @@
+---
+- name: Install agent Sophos
+  hosts: windows
+  gather_facts: no
+  tasks:
+    - name: SOPHOS | Remove old installer if exists
+      ansible.windows.win_file:
+        path: C:\Windows\Temp\SophosSetup.exe
+        state: absent
+
+    - name: Download Sophos
+      ansible.windows.win_get_url:
+        url: "https://dzr-api-amzn-us-west-2-fa88.api-upe.p.hmr.sophos.com/api/download/16fd4293d2508fe500192826c061b09d/SophosSetup.exe"
+        dest: C:\Windows\Temp\SophosSetup.exe
+
+    - name: Install Sophos
+      ansible.windows.win_package:
+        path: C:\Windows\Temp\SophosSetup.exe
+        arguments: --quiet
+        state: present
